@@ -18,3 +18,15 @@
 - Linux
 
 
+## Requirements
+
+- Python 3.x
+
+## Installation
+
+1. Save the main.py and sample code files in a folder.
+2. Using command prompt go to the directory and run the codes:
+   
+   cd your-directory-name
+   python main.py sample.txt
+
