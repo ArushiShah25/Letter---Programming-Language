@@ -1,4 +1,4 @@
-# SER502-ProLan2024
+# SER502-Letter
 
 # Team-3
 -Pavan kalyan Lingutla
