@@ -1,0 +1,5 @@
+T counter = 5;
+W (counter > 0) {
+    P counter;
+    T counter = counter - 1;
+}

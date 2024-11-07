@@ -1,0 +1,4 @@
+T a = 5;
+T b = 10;
+T result = a + b * 2;
+P result;
