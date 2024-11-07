@@ -1,1 +1,0 @@
-T x = 10; P x; S y = "Hello";
