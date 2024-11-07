@@ -187,6 +187,8 @@ class Parser:
             return self.parse_if_statement()
         elif self.current_token.type == TokenType.WHILE:
             return self.parse_while_statement()
+        elif self.current_token.type == TokenType.FOR:  
+            return self.parse_for_statement()
         elif self.current_token.type in [TokenType.TYPE_INT, TokenType.TYPE_BOOL, TokenType.TYPE_STRING]:
             return self.parse_declaration()
         else:
@@ -224,7 +226,24 @@ class Parser:
             return ASTNode('if', children=[condition, then_stmt, else_stmt])
         
         return ASTNode('if', children=[condition, then_stmt])
+
+    def parse_for_statement(self) -> ASTNode:
+        self.consume(TokenType.FOR)
+        self.consume(TokenType.LPAREN)
+        
+        init = self.parse_expression()
+        self.consume(TokenType.SEMICOLON)
+        
+        condition = self.parse_expression()
+        self.consume(TokenType.SEMICOLON)
+        
+        update = self.parse_expression()
+        self.consume(TokenType.RPAREN)
+        
+        body = self.parse_block()
     
+        return ASTNode('for', children=[init, condition, update, ASTNode('block', children=body)])
+
     def parse_while_statement(self) -> ASTNode:
         self.consume(TokenType.WHILE)
         self.consume(TokenType.LPAREN)
