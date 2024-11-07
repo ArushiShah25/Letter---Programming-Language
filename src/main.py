@@ -1,285 +1,379 @@
-import sys
+from enum import Enum
+from dataclasses import dataclass
+from typing import List, Optional, Any
 
-# Define token types
+class TokenType(Enum):
+    # Types
+    TYPE_INT = 'T'
+    TYPE_BOOL = 'B'
+    TYPE_STRING = 'S'
+    
+    # Keywords
+    PRINT = 'P'
+    IF = 'I'
+    ELSE = 'E'
+    FOR = 'F'
+    WHILE = 'W'
+    
+    # Operators
+    PLUS = '+'
+    MINUS = '-'
+    MULTIPLY = '*'
+    DIVIDE = '/'
+    
+    # Boolean operators
+    AND = '&'
+    OR = '|'
+    NOT = '!'
+    
+    # Relational operators
+    GREATER = '>'
+    LESS = '<'
+    EQUAL = '='
+    
+    # Special characters
+    LPAREN = '('
+    RPAREN = ')'
+    LBRACE = '{'    # Added curly braces
+    RBRACE = '}'    # Added curly braces
+    SEMICOLON = ';'
+    QUESTION = '?'
+    COLON = ':'
+    
+    # Other
+    IDENTIFIER = 'IDENTIFIER'
+    INTEGER_LITERAL = 'INTEGER_LITERAL'
+    STRING_LITERAL = 'STRING_LITERAL'
+    BOOLEAN_LITERAL = 'BOOLEAN_LITERAL'
+
+@dataclass
 class Token:
-    def __init__(self, token_type, value):
-        self.token_type = token_type
-        self.value = value
+    type: TokenType
+    value: str
+    line: int
+    position: int
 
-    def __repr__(self):
-        return f'Token({self.token_type}, {repr(self.value)})'
+@dataclass
+class ASTNode:
+    type: str
+    value: Any = None
+    children: List['ASTNode'] = None
 
-    def __eq__(self, other):
-        if isinstance(other, Token):
-            return self.token_type == other.token_type and self.value == other.value
-        return False
-
-    def __hash__(self):
-        return hash((self.token_type, self.value))
-
-
-# Tokenizer class
-class Tokenizer:
-    def __init__(self, source_code):
+class Lexer:
+    def __init__(self, source_code: str):
         self.source_code = source_code
         self.position = 0
-        self.current_char = self.source_code[self.position] if self.source_code else None
-
-    def error(self, message=""):
-        raise SyntaxError(f"Invalid character at position {self.position}. {message}")
-
+        self.line = 1
+        self.current_char = self.source_code[0] if source_code else None
+    
     def advance(self):
         self.position += 1
-        if self.position < len(self.source_code):
-            self.current_char = self.source_code[self.position]
-        else:
+        if self.position >= len(self.source_code):
             self.current_char = None
-
+        else:
+            self.current_char = self.source_code[self.position]
+            if self.current_char == '\n':
+                self.line += 1
+    
     def skip_whitespace(self):
-        while self.current_char is not None and self.current_char.isspace():
+        while self.current_char and self.current_char.isspace():
             self.advance()
-
-    def variable(self):
-        result = self.current_char
-        self.advance()
-        while self.current_char is not None and (self.current_char.isalnum() or self.current_char == '_'):
-            result += self.current_char
+    
+    def read_identifier(self) -> Token:
+        identifier = ''
+        start_pos = self.position
+        
+        while self.current_char and self.current_char.isalnum():
+            identifier += self.current_char
             self.advance()
-        return Token('IDENTIFIER', result)
-
-    def integer(self):
-        result = ''
-        while self.current_char is not None and self.current_char.isdigit():
-            result += self.current_char
+        
+        # Check if it's a single-letter keyword
+        for token_type in TokenType:
+            if token_type.value == identifier:
+                return Token(token_type, identifier, self.line, start_pos)
+        
+        return Token(TokenType.IDENTIFIER, identifier, self.line, start_pos)
+    
+    def read_number(self) -> Token:
+        number = ''
+        start_pos = self.position
+        
+        while self.current_char and self.current_char.isdigit():
+            number += self.current_char
             self.advance()
-        return Token('INTEGER', result)
-
-    def string(self):
-        self.advance()  # skip opening quote
-        result = ''
-        while self.current_char is not None and self.current_char != '"':
-            result += self.current_char
+        
+        return Token(TokenType.INTEGER_LITERAL, number, self.line, start_pos)
+    
+    def read_string(self) -> Token:
+        string = ''
+        start_pos = self.position
+        self.advance()  # Skip the opening quote
+        
+        while self.current_char and self.current_char != '"':
+            string += self.current_char
             self.advance()
-        self.advance()  # skip closing quote
-        return Token('STRING', result)
-
-    def tokenize(self):
-        tokens = []
-        while self.current_char is not None:
+        
+        if self.current_char == '"':
+            self.advance()  # Skip the closing quote
+        
+        return Token(TokenType.STRING_LITERAL, string, self.line, start_pos)
+    
+    def get_next_token(self) -> Optional[Token]:
+        while self.current_char:
             if self.current_char.isspace():
                 self.skip_whitespace()
                 continue
-            if self.current_char.islower() or self.current_char == '_':
-                tokens.append(self.variable())
-                continue
+            
+            if self.current_char.isalpha():
+                return self.read_identifier()
+            
             if self.current_char.isdigit():
-                tokens.append(self.integer())
-                continue
+                return self.read_number()
+            
             if self.current_char == '"':
-                tokens.append(self.string())
-                continue
-
-            # Handle single-character and compound tokens
-            if self.current_char == '=':
-                self.advance()
-                if self.current_char == '=':
-                    tokens.append(Token('EQ', '=='))
-                    self.advance()
-                else:
-                    tokens.append(Token('ASSIGN', '='))
-            elif self.current_char == '<':
-                self.advance()
-                if self.current_char == '=':
-                    tokens.append(Token('LE', '<='))
-                    self.advance()
-                else:
-                    tokens.append(Token('LT', '<'))
-            elif self.current_char == ';':
-                tokens.append(Token('SEMICOLON', ';'))
-            elif self.current_char == '?':
-                tokens.append(Token('TERNARY', '?'))
-            elif self.current_char == ':':
-                tokens.append(Token('TERNARY', ':'))
-            elif self.current_char == '+':
-                self.advance()
-                if self.current_char == '+':
-                    tokens.append(Token('INCREMENT', '++'))
-                    self.advance()  # Skip the second '+'
-                else:
-                    tokens.append(Token('ADD', '+'))
-                continue
-            elif self.current_char == ',':
-                tokens.append(Token('COMMA', ','))
-            elif self.current_char == '(':
-                tokens.append(Token('LPAREN', '('))
-            elif self.current_char == ')':
-                tokens.append(Token('RPAREN', ')'))
-            elif self.current_char in {'T', 'B', 'S'}:  # Add type keywords
-                tokens.append(Token('TYPE', self.current_char))
-            elif self.current_char == 'P':  # Print statement
-                tokens.append(Token('PRINT', 'P'))
-            elif self.current_char == 'I':  # If statement
-                tokens.append(Token('IF', 'I'))
-            elif self.current_char == 'E':  # Else statement
-                tokens.append(Token('ELSE', 'E'))
-            else:
-                self.error(f"Unexpected character: {self.current_char}")
-
+                return self.read_string()
+            
+            # Handle operators and special characters
+            current_char = self.current_char
+            current_pos = self.position
             self.advance()
-        return tokens
+            
+            # Map single characters to token types
+            char_to_token = {
+                '+': TokenType.PLUS,
+                '-': TokenType.MINUS,
+                '*': TokenType.MULTIPLY,
+                '/': TokenType.DIVIDE,
+                '&': TokenType.AND,
+                '|': TokenType.OR,
+                '!': TokenType.NOT,
+                '>': TokenType.GREATER,
+                '<': TokenType.LESS,
+                '=': TokenType.EQUAL,
+                '(': TokenType.LPAREN,
+                ')': TokenType.RPAREN,
+                '{': TokenType.LBRACE,  # Added
+                '}': TokenType.RBRACE,  # Added
+                ';': TokenType.SEMICOLON,
+                '?': TokenType.QUESTION,
+                ':': TokenType.COLON
+            }
+            
+            if current_char in char_to_token:
+                return Token(char_to_token[current_char], current_char, self.line, current_pos)
+            
+            raise SyntaxError(f"Unknown character '{current_char}' at line {self.line}, position {current_pos}")
+        
+        return None
 
-
-# Define AST nodes
-class Num:
-    def __init__(self, value):
-        self.value = value
-
-    def __repr__(self):
-        return f'Num({self.value})'
-
-
-class VarDecl:
-    def __init__(self, var_type, variable, value):
-        self.var_type = var_type
-        self.variable = variable
-        self.value = value
-
-    def __repr__(self):
-        return f'VarDecl({self.var_type}, {self.variable}, {repr(self.value)})'
-
-
-class Print:
-    def __init__(self, expression):
-        self.expression = expression
-
-    def __repr__(self):
-        return f'Print({self.expression})'
-
-
-class IfStatement:
-    def __init__(self, condition, true_branch, false_branch=None):
-        self.condition = condition
-        self.true_branch = true_branch
-        self.false_branch = false_branch
-
-    def __repr__(self):
-        return f'If({self.condition}, {self.true_branch}, {self.false_branch})'
-
-
-# Parser class
 class Parser:
-    def __init__(self, tokens):
-        self.tokens = tokens
-        self.current_token = self.tokens[0] if self.tokens else None
-        self.position = 0
-
-    def error(self, message=""):
-        raise SyntaxError(f"Invalid syntax at position {self.position}. {message}")
-
-    def advance(self):
-        self.position += 1
-        if self.position < len(self.tokens):
-            self.current_token = self.tokens[self.position]
+    def __init__(self, lexer: Lexer):
+        self.lexer = lexer
+        self.current_token = self.lexer.get_next_token()
+    
+    def consume(self, token_type: TokenType):
+        if self.current_token and self.current_token.type == token_type:
+            self.current_token = self.lexer.get_next_token()
         else:
-            self.current_token = None
-
-    def parse(self):
+            raise SyntaxError(f"Expected {token_type}, got {self.current_token}")
+    
+    def parse_statement(self) -> ASTNode:
+        if not self.current_token:
+            return None
+        
+        if self.current_token.type == TokenType.PRINT:
+            return self.parse_print_statement()
+        elif self.current_token.type == TokenType.IF:
+            return self.parse_if_statement()
+        elif self.current_token.type == TokenType.WHILE:
+            return self.parse_while_statement()
+        elif self.current_token.type in [TokenType.TYPE_INT, TokenType.TYPE_BOOL, TokenType.TYPE_STRING]:
+            return self.parse_declaration()
+        else:
+            return self.parse_expression()
+    
+    def parse_block(self) -> List[ASTNode]:
         statements = []
-        while self.current_token is not None:
-            if self.current_token.token_type == 'TYPE':
-                # Handle T, B, S
-                var_decl = self.variable_decl()
-                statements.append(var_decl)
-            elif self.current_token.token_type == 'PRINT':
-                statements.append(self.parse_print_statement())
-            elif self.current_token.token_type == 'IF':
-                statements.append(self.parse_if_statement())
-            else:
-                self.error("Unexpected token")
-
-            if self.current_token is not None and self.current_token.token_type == 'SEMICOLON':
-                self.advance()  # Move past semicolon
-
+        self.consume(TokenType.LBRACE)
+        
+        while self.current_token and self.current_token.type != TokenType.RBRACE:
+            stmt = self.parse_statement()
+            if stmt:
+                statements.append(stmt)
+                
+        self.consume(TokenType.RBRACE)
+        return statements
+    
+    def parse_print_statement(self) -> ASTNode:
+        self.consume(TokenType.PRINT)
+        expr = self.parse_expression()
+        self.consume(TokenType.SEMICOLON)
+        return ASTNode('print', children=[expr])
+    
+    def parse_if_statement(self) -> ASTNode:
+        self.consume(TokenType.IF)
+        self.consume(TokenType.LPAREN)
+        condition = self.parse_expression()
+        self.consume(TokenType.RPAREN)
+        
+        then_stmt = ASTNode('block', children=self.parse_block())
+        
+        if self.current_token and self.current_token.type == TokenType.ELSE:
+            self.consume(TokenType.ELSE)
+            else_stmt = ASTNode('block', children=self.parse_block())
+            return ASTNode('if', children=[condition, then_stmt, else_stmt])
+        
+        return ASTNode('if', children=[condition, then_stmt])
+    
+    def parse_while_statement(self) -> ASTNode:
+        self.consume(TokenType.WHILE)
+        self.consume(TokenType.LPAREN)
+        condition = self.parse_expression()
+        self.consume(TokenType.RPAREN)
+        body = ASTNode('block', children=self.parse_block())
+        return ASTNode('while', children=[condition, body])
+    
+    def parse_declaration(self) -> ASTNode:
+        type_token = self.current_token
+        self.current_token = self.lexer.get_next_token()
+        
+        identifier = self.current_token.value
+        self.consume(TokenType.IDENTIFIER)
+        
+        if self.current_token.type == TokenType.EQUAL:
+            self.consume(TokenType.EQUAL)
+            value = self.parse_expression()
+            self.consume(TokenType.SEMICOLON)
+            return ASTNode('declaration', value={'type': type_token.type, 'identifier': identifier}, children=[value])
+        
+        self.consume(TokenType.SEMICOLON)
+        return ASTNode('declaration', value={'type': type_token.type, 'identifier': identifier})
+    
+    def parse_expression(self) -> ASTNode:
+        left = self.parse_term()
+        
+        while self.current_token and self.current_token.type in [
+            TokenType.PLUS, TokenType.MINUS, TokenType.GREATER, TokenType.LESS, 
+            TokenType.EQUAL, TokenType.AND, TokenType.OR
+        ]:
+            operator = self.current_token.type
+            self.current_token = self.lexer.get_next_token()
+            right = self.parse_term()
+            left = ASTNode('binary_op', value=operator, children=[left, right])
+        
+        return left
+    
+    def parse_term(self) -> ASTNode:
+        left = self.parse_factor()
+        
+        while self.current_token and self.current_token.type in [TokenType.MULTIPLY, TokenType.DIVIDE]:
+            operator = self.current_token.type
+            self.current_token = self.lexer.get_next_token()
+            right = self.parse_factor()
+            left = ASTNode('binary_op', value=operator, children=[left, right])
+        
+        return left
+    
+    def parse_factor(self) -> ASTNode:
+        token = self.current_token
+        
+        if token.type == TokenType.INTEGER_LITERAL:
+            self.current_token = self.lexer.get_next_token()
+            return ASTNode('integer_literal', value=int(token.value))
+        elif token.type == TokenType.STRING_LITERAL:
+            self.current_token = self.lexer.get_next_token()
+            return ASTNode('string_literal', value=token.value)
+        elif token.type == TokenType.BOOLEAN_LITERAL:
+            self.current_token = self.lexer.get_next_token()
+            return ASTNode('boolean_literal', value=token.value.lower() == 'true')
+        elif token.type == TokenType.IDENTIFIER:
+            self.current_token = self.lexer.get_next_token()
+            return ASTNode('identifier', value=token.value)
+        elif token.type == TokenType.LPAREN:
+            self.consume(TokenType.LPAREN)
+            expr = self.parse_expression()
+            self.consume(TokenType.RPAREN)
+            return expr
+        elif token.type == TokenType.NOT:
+            self.current_token = self.lexer.get_next_token()
+            factor = self.parse_factor()
+            return ASTNode('unary_op', value=TokenType.NOT, children=[factor])
+        
+        raise SyntaxError(f"Unexpected token {token}")
+    
+    def parse(self) -> List[ASTNode]:
+        statements = []
+        while self.current_token:
+            stmt = self.parse_statement()
+            if stmt:
+                statements.append(stmt)
         return statements
 
-    def variable_decl(self):
-        var_type = self.current_token.value
-        self.advance()  # Move past type keyword (T, B, S)
-        if self.current_token.token_type != 'IDENTIFIER':
-            self.error("Expected identifier")
-        variable = self.current_token.value
-        self.advance()  # Move past identifier
-        if self.current_token.token_type != 'ASSIGN':
-            self.error("Expected assignment operator")
-        self.advance()  # Move past assign token
-        # Check if the next token is a string or integer
-        if self.current_token.token_type == 'STRING':
-            value = self.string()
-        elif self.current_token.token_type == 'INTEGER':
-            value = self.num()
-        else:
-            self.error("Unexpected value type")
-        return VarDecl(var_type, variable, value)
+def print_ast(node: ASTNode, indent: int = 0) -> None:
+    """Pretty print the AST with proper indentation."""
+    indent_str = "  " * indent
+    
+    if not node:
+        return
+    
+    # Print node type
+    print(f"{indent_str}Type: {node.type}")
+    
+    # Print node value if it exists
+    if node.value is not None:
+        print(f"{indent_str}Value: {node.value}")
+    
+    # Recursively print children
+    if node.children:
+        print(f"{indent_str}Children:")
+        for child in node.children:
+            print_ast(child, indent + 1)
 
-    def parse_print_statement(self):
-        self.advance()  # Skip 'P'
-        expression = self.current_token.value
-        self.advance()  # Move past the expression
-        return Print(expression)
+def print_program_ast(ast_nodes: List[ASTNode]) -> None:
+    """Print the entire program's AST."""
+    print("Program AST:")
+    print("===========")
+    for i, node in enumerate(ast_nodes, 1):
+        print(f"\nStatement {i}:")
+        print_ast(node)
+        print("-" * 40)
 
-    def parse_if_statement(self):
-        self.advance()  # Skip 'I'
-        condition = self.parse_expression()  # Parse condition
-        true_branch = self.parse()  # Parse true branch statement
-        false_branch = None
-        if self.current_token.token_type == 'ELSE':
-            self.advance()  # Skip 'E'
-            false_branch = self.parse()  # Parse false branch
-        return IfStatement(condition, true_branch, false_branch)
+def parse_program(source_code: str) -> List[ASTNode]:
+    lexer = Lexer(source_code)
+    parser = Parser(lexer)
+    return parser.parse()
 
-    def string(self):
-        if self.current_token.token_type != 'STRING':
-            self.error("Expected a string")
-        value = self.current_token.value
-        self.advance()  # Move past string
-        return value
+import sys
 
-    def num(self):
-        if self.current_token.token_type != 'INTEGER':
-            self.error("Expected an integer")
-        value = Num(self.current_token.value)
-        self.advance()  # Move past integer
-        return value
+def read_file(filename: str) -> str:
+    """Read source code from a file."""
+    try:
+        with open(filename, 'r') as file:
+            return file.read()
+    except FileNotFoundError:
+        print(f"Error: File '{filename}' not found.")
+        sys.exit(1)
+    except Exception as e:
+        print(f"Error reading file: {e}")
+        sys.exit(1)
 
-    def parse_expression(self):
-        # Basic implementation; expand as needed
-        if self.current_token.token_type == 'IDENTIFIER':
-            expr = self.current_token.value
-            self.advance()
-            return expr
-        elif self.current_token.token_type == 'INTEGER':
-            return self.num()
-        else:
-            self.error("Expected an expression")
-
-
-def run_file(file_path):
-    with open(file_path, 'r') as file:
-        source_code = file.read()
-
-    # Tokenizing the source code
-    tokenizer = Tokenizer(source_code)
-    tokens = tokenizer.tokenize()
-    print("Tokens:", tokens)
-
-    # Parsing the tokens
-    parser = Parser(tokens)
-    parse_tree = parser.parse()
-    print("Parse Tree:", parse_tree)
-
+def main():
+    # Check if filename is provided as command line argument
+    if len(sys.argv) != 2:
+        print("Usage: python parser.py <filename>")
+        print("Example: python parser.py program.txt")
+        sys.exit(1)
+    
+    filename = sys.argv[1]
+    source_code = read_file(filename)
+    
+    try:
+        ast = parse_program(source_code)
+        print_program_ast(ast)
+    except SyntaxError as e:
+        print(f"Syntax Error: {e}")
+    except Exception as e:
+        print(f"Error: {e}")
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python main.py <source_code_file>")
-    else:
-        run_file(sys.argv[1])
+    main()
