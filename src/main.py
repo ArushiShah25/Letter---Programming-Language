@@ -14,6 +14,17 @@ class TokenType(Enum):
     ELSE = 'E'
     FOR = 'F'
     WHILE = 'W'
+    METHOD = 'M'       
+    RETURN = 'R'       
+    ARRAY = 'A'        
+    COMMENT = '#'      
+    INPUT = 'N'       
+    JOIN = 'J'        
+    UPPER = 'U'      
+    LOWER = 'L'     
+    STACK = 'K'       
+    QUEUE = 'Q'       
+    CONSTANT = 'C'
     
     # Operators
     PLUS = '+'
@@ -34,11 +45,15 @@ class TokenType(Enum):
     # Special characters
     LPAREN = '('
     RPAREN = ')'
-    LBRACE = '{'    # Added curly braces
-    RBRACE = '}'    # Added curly braces
+    LBRACE = '{'    
+    RBRACE = '}'
+    LBRACKET = '['
+    RBRACKET = ']'
     SEMICOLON = ';'
     QUESTION = '?'
     COLON = ':'
+    COMMA = ','
+    DOT = '.'
     
     # Other
     IDENTIFIER = 'IDENTIFIER'
@@ -83,7 +98,8 @@ class Lexer:
         identifier = ''
         start_pos = self.position
         
-        while self.current_char and self.current_char.isalnum():
+        # Allow letters, numbers, and underscores in identifiers
+        while self.current_char and (self.current_char.isalnum() or self.current_char == '_'):
             identifier += self.current_char
             self.advance()
         
@@ -117,12 +133,39 @@ class Lexer:
             self.advance()  # Skip the closing quote
         
         return Token(TokenType.STRING_LITERAL, string, self.line, start_pos)
-    
+
+    def read_comment(self) -> Token:
+        start_pos = self.position
+        self.advance()  # Skip first #
+        
+        if self.current_char == '*':  # Multi-line comment
+            self.advance()  # Skip *
+            while self.current_char:
+                if self.current_char == '*' and self.peek() == '#':
+                    self.advance()  # Skip *
+                    self.advance()  # Skip #
+                    break
+                self.advance()
+        else:  # Single-line comment
+            while self.current_char and self.current_char != '\n':
+                self.advance()
+        
+        return Token(TokenType.COMMENT, '#', self.line, start_pos)
+
+    def peek(self) -> Optional[str]:
+        peek_pos = self.position + 1
+        if peek_pos >= len(self.source_code):
+            return None
+        return self.source_code[peek_pos]
+        
     def get_next_token(self) -> Optional[Token]:
         while self.current_char:
             if self.current_char.isspace():
                 self.skip_whitespace()
                 continue
+
+            if self.current_char == '#':
+                return self.read_comment()
             
             if self.current_char.isalpha():
                 return self.read_identifier()
@@ -152,10 +195,14 @@ class Lexer:
                 '=': TokenType.EQUAL,
                 '(': TokenType.LPAREN,
                 ')': TokenType.RPAREN,
-                '{': TokenType.LBRACE,  # Added
-                '}': TokenType.RBRACE,  # Added
+                '{': TokenType.LBRACE,  
+                '}': TokenType.RBRACE, 
                 ';': TokenType.SEMICOLON,
                 '?': TokenType.QUESTION,
+                ',': TokenType.COMMA,      
+                '[': TokenType.LBRACKET, 
+                ']': TokenType.RBRACKET,   
+                '.': TokenType.DOT,
                 ':': TokenType.COLON
             }
             
@@ -176,7 +223,7 @@ class Parser:
             self.current_token = self.lexer.get_next_token()
         else:
             raise SyntaxError(f"Expected {token_type}, got {self.current_token}")
-    
+
     def parse_statement(self) -> ASTNode:
         if not self.current_token:
             return None
@@ -187,13 +234,32 @@ class Parser:
             return self.parse_if_statement()
         elif self.current_token.type == TokenType.WHILE:
             return self.parse_while_statement()
-        elif self.current_token.type == TokenType.FOR:  
+        elif self.current_token.type == TokenType.FOR:
             return self.parse_for_statement()
+        elif self.current_token.type == TokenType.METHOD:
+            return self.parse_method()
+        elif self.current_token.type == TokenType.RETURN:
+            return self.parse_return()
+        elif self.current_token.type == TokenType.ARRAY:
+            return self.parse_array()
+        elif self.current_token.type == TokenType.INPUT:
+            return self.parse_input()
+        elif self.current_token.type in [TokenType.STACK, TokenType.QUEUE]:
+            return self.parse_data_structure()
+        elif self.current_token.type == TokenType.CONSTANT:
+            return self.parse_constant()
+        elif self.current_token.type == TokenType.COMMENT:
+            return self.parse_comment()
         elif self.current_token.type in [TokenType.TYPE_INT, TokenType.TYPE_BOOL, TokenType.TYPE_STRING]:
             return self.parse_declaration()
+        elif self.current_token.type == TokenType.IDENTIFIER:
+            return self.parse_identifier_statement()
         else:
-            return self.parse_expression()
-    
+            expr = self.parse_expression()
+            if self.current_token and self.current_token.type == TokenType.SEMICOLON:
+                self.consume(TokenType.SEMICOLON)
+            return expr
+        
     def parse_block(self) -> List[ASTNode]:
         statements = []
         self.consume(TokenType.LBRACE)
@@ -251,6 +317,158 @@ class Parser:
         self.consume(TokenType.RPAREN)
         body = ASTNode('block', children=self.parse_block())
         return ASTNode('while', children=[condition, body])
+
+    def parse_method(self) -> ASTNode:
+        """Parse method declaration"""
+        self.consume(TokenType.METHOD)
+        name = self.current_token.value
+        self.consume(TokenType.IDENTIFIER)
+        self.consume(TokenType.LPAREN)
+        
+        parameters = []
+        if self.current_token.type != TokenType.RPAREN:
+            parameters = self.parse_parameter_list()
+        
+        self.consume(TokenType.RPAREN)
+        body = self.parse_block()
+        
+        return ASTNode('method', value=name, children=[
+            ASTNode('parameters', children=parameters),
+            ASTNode('body', children=body)
+        ])
+
+    def parse_parameter_list(self) -> List[ASTNode]:
+        """Parse function parameters"""
+        parameters = []
+        
+        while True:
+            param_type = self.current_token.type
+            self.current_token = self.lexer.get_next_token()
+            param_name = self.current_token.value
+            self.consume(TokenType.IDENTIFIER)
+            
+            parameters.append(ASTNode('parameter', 
+                                    value={'type': param_type, 'name': param_name}))
+            
+            if self.current_token.type != TokenType.COMMA:
+                break
+            self.consume(TokenType.COMMA)
+        
+        return parameters
+
+    def parse_return(self) -> ASTNode:
+        """Parse return statement"""
+        self.consume(TokenType.RETURN)
+        expr = self.parse_expression()
+        self.consume(TokenType.SEMICOLON)
+        return ASTNode('return', children=[expr])
+
+    def parse_comment(self) -> ASTNode:
+        """Parse comment statement"""
+        comment_token = self.current_token
+        self.current_token = self.lexer.get_next_token()
+        return ASTNode('comment', value=comment_token.value)
+        
+    def parse_array(self) -> ASTNode:
+        """Parse array declaration and operations"""
+        self.consume(TokenType.ARRAY)
+        array_type = self.current_token.type
+        self.current_token = self.lexer.get_next_token()
+        name = self.current_token.value
+        self.consume(TokenType.IDENTIFIER)
+        self.consume(TokenType.EQUAL)
+        self.consume(TokenType.LBRACKET)
+        
+        elements = []
+        if self.current_token.type != TokenType.RBRACKET:
+            elements = self.parse_expression_list()
+        
+        self.consume(TokenType.RBRACKET)
+        self.consume(TokenType.SEMICOLON)
+        
+        return ASTNode('array_declaration', 
+                      value={'type': array_type, 'name': name}, 
+                      children=elements)
+    
+    def parse_expression_list(self) -> List[ASTNode]:
+        """Parse comma-separated expressions"""
+        expressions = [self.parse_expression()]
+        
+        while self.current_token.type == TokenType.COMMA:
+            self.consume(TokenType.COMMA)
+            expressions.append(self.parse_expression())
+        
+        return expressions
+    
+    def parse_input(self) -> ASTNode:
+        """Parse input statement"""
+        self.consume(TokenType.INPUT)
+        prompt = None
+        if self.current_token.type == TokenType.STRING_LITERAL:
+            prompt = self.current_token.value
+            self.current_token = self.lexer.get_next_token()
+            self.consume(TokenType.SEMICOLON)
+            return ASTNode('input', value={'prompt': prompt})
+        
+        # If there's no prompt, just create an input node
+        self.consume(TokenType.SEMICOLON)
+        return ASTNode('input')
+
+    def parse_string_operation(self) -> ASTNode:
+        """Parse string operations (join, upper, lower)"""
+        op_type = self.current_token.type
+        self.current_token = self.lexer.get_next_token()
+        self.consume(TokenType.LPAREN)
+        expr = self.parse_expression()
+        self.consume(TokenType.RPAREN)
+        self.consume(TokenType.SEMICOLON)
+        return ASTNode('string_operation', value={'operation': op_type}, children=[expr])
+    
+    def parse_data_structure(self) -> ASTNode:
+        """Parse stack and queue operations"""
+        struct_type = self.current_token.type
+        self.current_token = self.lexer.get_next_token()
+        
+        if self.current_token.type in [TokenType.TYPE_INT, TokenType.TYPE_BOOL, TokenType.TYPE_STRING]:
+            # Declaration
+            data_type = self.current_token.type
+            self.current_token = self.lexer.get_next_token()
+            name = self.current_token.value
+            self.consume(TokenType.IDENTIFIER)
+            self.consume(TokenType.SEMICOLON)
+            return ASTNode('data_structure_declaration', 
+                          value={'type': struct_type, 'data_type': data_type, 'name': name})
+        else:
+            # Operation (push, pop, add, remove)
+            name = self.current_token.value
+            self.consume(TokenType.IDENTIFIER)
+            self.consume(TokenType.DOT)
+            operation = self.current_token.value
+            self.current_token = self.lexer.get_next_token()
+            self.consume(TokenType.LPAREN)
+            expr = None
+            if self.current_token.type != TokenType.RPAREN:
+                expr = self.parse_expression()
+            self.consume(TokenType.RPAREN)
+            self.consume(TokenType.SEMICOLON)
+            return ASTNode('data_structure_operation', 
+                          value={'type': struct_type, 'name': name, 'operation': operation},
+                          children=[expr] if expr else None)
+    
+    def parse_constant(self) -> ASTNode:
+        """Parse constant declaration"""
+        self.consume(TokenType.CONSTANT)
+        const_type = self.current_token.type
+        self.current_token = self.lexer.get_next_token()
+        name = self.current_token.value
+        self.consume(TokenType.IDENTIFIER)
+        self.consume(TokenType.EQUAL)
+        value = self.parse_expression()
+        self.consume(TokenType.SEMICOLON)
+        return ASTNode('constant_declaration',
+                      value={'type': const_type, 'name': name},
+                      children=[value])
+    
     
     def parse_declaration(self) -> ASTNode:
         type_token = self.current_token
@@ -281,7 +499,41 @@ class Parser:
             left = ASTNode('binary_op', value=operator, children=[left, right])
         
         return left
-    
+
+    def parse_identifier_statement(self) -> ASTNode:
+        """Parse statements that start with an identifier"""
+        name = self.current_token.value
+        self.consume(TokenType.IDENTIFIER)
+        
+        # If it's a method call (e.g., stack.push(5))
+        if self.current_token.type == TokenType.DOT:
+            self.consume(TokenType.DOT)
+            method = self.current_token.value
+            self.current_token = self.lexer.get_next_token()
+            self.consume(TokenType.LPAREN)
+            
+            args = []
+            if self.current_token.type != TokenType.RPAREN:
+                args = self.parse_expression_list()
+            
+            self.consume(TokenType.RPAREN)
+            self.consume(TokenType.SEMICOLON)
+            
+            return ASTNode('method_call', 
+                          value={'object': name, 'method': method},
+                          children=args)
+        
+        # If it's an assignment
+        elif self.current_token.type == TokenType.EQUAL:
+            self.consume(TokenType.EQUAL)
+            value = self.parse_expression()
+            self.consume(TokenType.SEMICOLON)
+            return ASTNode('assignment', 
+                          value={'identifier': name},
+                          children=[value])
+        
+        raise SyntaxError(f"Unexpected token after identifier: {self.current_token}")
+        
     def parse_term(self) -> ASTNode:
         left = self.parse_factor()
         
@@ -292,7 +544,7 @@ class Parser:
             left = ASTNode('binary_op', value=operator, children=[left, right])
         
         return left
-    
+        
     def parse_factor(self) -> ASTNode:
         token = self.current_token
         
@@ -305,9 +557,54 @@ class Parser:
         elif token.type == TokenType.BOOLEAN_LITERAL:
             self.current_token = self.lexer.get_next_token()
             return ASTNode('boolean_literal', value=token.value.lower() == 'true')
-        elif token.type == TokenType.IDENTIFIER:
+        elif token.type in [TokenType.UPPER, TokenType.LOWER, TokenType.JOIN]:
+            # Handle string operations
+            op_type = token.type
             self.current_token = self.lexer.get_next_token()
-            return ASTNode('identifier', value=token.value)
+            self.consume(TokenType.LPAREN)
+            expr = self.parse_expression()
+            self.consume(TokenType.RPAREN)
+            return ASTNode('string_operation', 
+                          value={'operation': op_type},
+                          children=[expr])
+        elif token.type == TokenType.INPUT:
+            # Handle input as an expression
+            self.current_token = self.lexer.get_next_token()
+            return ASTNode('input_expression')
+        elif token.type == TokenType.IDENTIFIER:
+            name = token.value
+            self.current_token = self.lexer.get_next_token()
+            
+            # Check if this is a method call or function call
+            if self.current_token and self.current_token.type == TokenType.DOT:
+                # Method call (e.g., stack.push)
+                self.consume(TokenType.DOT)
+                operation = self.current_token.value
+                self.current_token = self.lexer.get_next_token()
+                self.consume(TokenType.LPAREN)
+                
+                arguments = []
+                if self.current_token.type != TokenType.RPAREN:
+                    arguments = self.parse_expression_list()
+                
+                self.consume(TokenType.RPAREN)
+                
+                return ASTNode('method_call', 
+                             value={'object': name, 'method': operation},
+                             children=arguments)
+            elif self.current_token and self.current_token.type == TokenType.LPAREN:
+                # Function call (e.g., add(x,y))
+                self.consume(TokenType.LPAREN)
+                arguments = []
+                if self.current_token.type != TokenType.RPAREN:
+                    arguments = self.parse_expression_list()
+                self.consume(TokenType.RPAREN)
+                
+                return ASTNode('function_call',
+                             value={'function': name},
+                             children=arguments)
+            
+            return ASTNode('identifier', value=name)
         elif token.type == TokenType.LPAREN:
             self.consume(TokenType.LPAREN)
             expr = self.parse_expression()
