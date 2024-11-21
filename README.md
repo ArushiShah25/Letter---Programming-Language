@@ -6,27 +6,115 @@
 -Pradyumn Mohta
 
 # Description
- Letter is a minimalistic, single-letter syntax language designed for efficient and compact code expression. Each command or keyword is represented by a single uppercase letter, reducing verbosity, increasing 
- speed and making the language intuitive for those familiar with foundational programming constructs. It comes with all the essentials: you can work with boolean logic, perform calculations 
- with numbers, and assign values to strings. You’ll find familiar tools like if-then-else statements and loops (for and while) to help structure your code. Whether 
- you’re doing simple math or comparing values, the language supports multiple data types like booleans, integers and strings. It’s designed to work smoothly on Windows, macOS, and Linux, 
- giving you the flexibility to code wherever you are.
+ Letter is a minimalistic, single-letter syntax language designed for efficient and compact code expression. Each command or keyword is represented by a single uppercase letter, reducing verbosity, increasing speed, and making the language intuitive for those familiar with foundational programming constructs. The language supports comprehensive programming features while maintaining simplicity in syntax.
 
-# Supported Systems
-- Windows
-- MacOS
-- Linux
+## Features
+
+Basic Types and Variables
+
+Integer (T): Whole number values
+String (S): Text values
+Boolean: Represented using integers (0 and 1)
+
+Arithmetic Operations
+
+Addition (+)
+Subtraction (-)
+Multiplication (*)
+Division (/)
+
+Control Structures
+
+If-Else (I, E): Conditional branching
+While Loop (W): Conditional looping
+For Loop (F): Iterative looping
+
+Functions
+
+Function Declaration (M): Method/Function definition
+Return Statement (R): Return values from functions
+Function Parameters: Support for multiple parameters
+
+Data Structures
+
+Arrays (A): Support for integer and string arrays
+Stack (K): Last-In-First-Out data structure
+Queue (Q): First-In-First-Out data structure
+
+String Operations
+
+Uppercase (U): Convert string to uppercase
+Lowercase (L): Convert string to lowercase
+String Comparison: Using = operator
+
+Additional Features
+
+Constants (C): Immutable values
+Input Operations (N): Read user input
+Print Statement (P): Output values
+Ternary Operator (?:): Conditional expressions
+Comments: Single-line (#) and multi-line (#* *#)
+
+## Implementation
+The compiler/interpreter is implemented in Python and consists of three main components:
+
+Lexer (lexer_parser.py):
+
+Tokenizes source code
+Handles language syntax
+Processes comments
 
 
-## Requirements
+Parser (lexer_parser.py):
 
-- Python 3.x
+Builds Abstract Syntax Tree (AST)
+Validates syntax
+Manages operator precedence
 
-## Installation
 
-1. Save the main.py and sample code files in a folder.
-2. Using command prompt go to the directory and run the codes:
-   
-   cd your-directory-name
-   python main.py sample.txt
+Runtime (runtime.py):
+
+Executes the AST
+Manages memory and scope
+Handles operations
+Provides error handling
+
+## Installation and Setup
+
+Clone the repository
+No additional dependencies required
+Run using Python 3.x
+
+## Build and Execution Instructions
+To run a program:
+bash
+python main.py <filename>
+
+Example:
+bash
+python main.py test_program.txt
+
+## Test Files
+The repository includes comprehensive test files for each feature:
+
+test_arithmetic.txt: Basic operations and variables
+test_strings.txt: String operations and comparisons
+test_control_flow.txt: If-else, loops
+test_functions.txt: Function definitions and calls
+test_arrays.txt: Array operations
+test_stack.txt: Stack operations
+test_queue.txt: Queue operations
+test_constants.txt: Constant declarations
+test_io.txt: Input/Output operations
+test_ternary.txt: Ternary operator
+
+## Error Handling
+The interpreter includes error checking for:
+
+Syntax errors
+Runtime errors
+Type mismatches
+Undefined variables
+Array bounds
+Invalid operations
 
