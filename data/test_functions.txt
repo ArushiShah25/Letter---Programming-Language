@@ -1,0 +1,67 @@
+P "=== Testing Functions ===";
+
+# Basic function
+M add(T x, T y) {
+    R x + y;
+}
+
+# Function with control flow
+M max(T a, T b) {
+    I (a > b) {
+        R a;
+    } E {
+        R b;
+    }
+}
+
+# Function with multiple returns
+M absoluteDiff(T a, T b) {
+    I (a > b) {
+        R a - b;
+    }
+    R b - a;
+}
+
+# Recursive function
+M factorial(T n) {
+    I (n = 0) {
+        R 1;
+    }
+    R n * factorial(n - 1);
+}
+
+# Function using strings
+M greet(S name) {
+    R U(name);
+}
+
+# Testing all functions
+P "Testing basic addition:";
+T sum = add(5, 3);
+P sum;
+
+P "Testing max function:";
+T maximum = max(10, 7);
+P maximum;
+
+P "Testing absolute difference:";
+T diff = absoluteDiff(5, 8);
+P diff;
+
+P "Testing factorial:";
+T fact = factorial(5);
+P fact;
+
+P "Testing string function:";
+S greeting = greet("hello");
+P greeting;
+
+# Nested function calls
+T result = add(max(3, 4), max(5, 6));
+P "Nested function result:";
+P result;
+
+# Functions with expressions
+T expr_result = add(2 * 3, 4 + 5);
+P "Expression in function:";
+P expr_result;

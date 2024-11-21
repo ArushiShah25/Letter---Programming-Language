@@ -1,0 +1,62 @@
+P "=== Testing Control Flow ===";
+
+# If-Else Tests
+P "Testing If-Else:";
+T x = 10;
+I (x > 5) {
+    P "x is greater than 5";
+}
+I (x < 20) {
+    P "x is less than 20";
+} E {
+    P "x is greater than or equal to 20";
+}
+
+# Nested if-else
+I (x > 0) {
+    I (x < 15) {
+        P "x is between 0 and 15";
+    }
+}
+
+# While Loop Tests
+P "Testing While Loops:";
+T counter = 5;
+P "Counting down from 5:";
+W (counter > 0) {
+    P counter;
+    counter = counter - 1;
+}
+
+# Nested while loops
+T i = 1;
+W (i < 4) {
+    T j = 1;
+    W (j < 3) {
+        P "i = "; 
+        P i;
+        P "j = "; 
+        P j;
+        j = j + 1;
+    }
+    i = i + 1;
+}
+
+# For Loop Tests
+P "Testing For Loops:";
+P "Counting up to 3:";
+T k = 0;
+F (k = 0; k < 3; k = k + 1) {
+    P k;
+}
+
+# Complex conditions
+T a = 5;
+T b = 10;
+I (a < b & b < 15) {
+    P "Both conditions true";
+}
+
+I (a < 3 | b > 8) {
+    P "At least one condition true";
+}

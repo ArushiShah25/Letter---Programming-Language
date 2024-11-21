@@ -1,0 +1,62 @@
+P "=== Testing Constants ===";
+
+# Numeric constants
+C T MAX_VALUE = 100;
+C T MIN_VALUE = 0;
+C T PI = 3;
+
+P "Numeric constants:";
+P MAX_VALUE;
+P MIN_VALUE;
+P PI;
+
+# String constants
+C S GREETING = "Hello";
+C S ERROR_MSG = "Error occurred";
+C S APP_NAME = "TestApp";
+
+P "String constants:";
+P GREETING;
+P ERROR_MSG;
+P APP_NAME;
+
+# Using constants in expressions
+T value = MAX_VALUE / 2;
+P "Half of MAX_VALUE:";
+P value;
+
+# Constants in conditions
+I (value < MAX_VALUE) {
+    P "Value is within limit";
+}
+
+I (value > MIN_VALUE) {
+    P "Value is above minimum";
+}
+
+# Constants with strings
+S message = GREETING;
+P "Using string constant:";
+P message;
+
+# Constants in loops
+T counter = 3;
+W (counter > MIN_VALUE) {
+    P counter;
+    counter = counter - 1;
+}
+
+# Constants in expressions
+T result = MAX_VALUE + MIN_VALUE;
+P "Sum of MAX and MIN:";
+P result;
+
+# Constants with string operations
+S upper_greeting = U(GREETING);
+P "Uppercase constant:";
+P upper_greeting;
+
+# Constants in comparisons
+T is_max = value = MAX_VALUE;
+P "Is at max value (0 or 1):";
+P is_max;

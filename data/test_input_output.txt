@@ -1,0 +1,83 @@
+P "=== Testing Input/Output Number Operations ===";
+
+# Basic output
+P "Basic string output:";
+P "Hello, World!";
+
+# Output with variables
+T num = 42;
+P "Number value:";
+P num;
+
+# Basic input
+P "Basic input test:";
+N "Enter a number: ";
+T input_val = N;
+P "You entered:";
+P input_val;
+
+# Input with processing
+N "Enter another number: ";
+T x = N;
+T doubled = x * 2;
+P "Double of your input:";
+P doubled;
+
+# Input with conditions
+N "Enter a value between 1 and 10: ";
+T val = N;
+I (val > 5) {
+    P "Value is greater than 5";
+} E {
+    P "Value is less than or equal to 5";
+}
+
+# Multiple inputs
+P "Enter two numbers:";
+N "First number: ";
+T a = N;
+N "Second number: ";
+T b = N;
+T sum = a + b;
+P "Sum of your numbers:";
+P sum;
+
+# Input in loops
+T count = 3;
+W (count > 0) {
+    N "Enter value: ";
+    T v = N;
+    P "You entered:";
+    P v;
+    count = count - 1;
+}
+
+# String input test
+P "Testing string input:";
+N "Enter any text: ";
+S text_input = N;
+P "You entered:";
+P text_input;
+
+# String comparison test
+P "Testing string comparison:";
+N "Enter Hello: ";
+S greeting = N;
+I (greeting = "Hello") {
+    P "You typed Hello!";
+} E {
+    P "You typed something else";
+}
+
+# Multiple inputs test
+P "Testing multiple inputs:";
+N "Enter your name: ";
+S name = N;
+N "Enter your age: ";
+T age = N;
+P "Summary:";
+P "Name: ";
+P name;
+P "Age: ";
+P age;
+

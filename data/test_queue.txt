@@ -1,0 +1,69 @@
+P "=== Testing Queue Operations ===";
+
+# Queue declaration
+Q T queue;
+P "Queue operations test:";
+
+# Basic add operations
+P "Adding elements:";
+queue.add(10);
+P "Added 10";
+queue.add(20);
+P "Added 20";
+queue.add(30);
+P "Added 30";
+
+# Basic remove operations
+T val1 = queue.remove();
+P "Removed first value (should be 10):";
+P val1;
+
+T val2 = queue.remove();
+P "Removed second value (should be 20):";
+P val2;
+
+# Add after remove
+queue.add(40);
+P "Added 40";
+T val3 = queue.remove();
+P "Removed third value (should be 30):";
+P val3;
+
+# Queue with expressions
+T x = 5;
+T y = 10;
+queue.add(x + y);
+P "Added sum of x and y";
+T val4 = queue.remove();
+P "Removed sum value:";
+P val4;
+
+# Queue in loops
+P "Adding values in loop:";
+T i = 1;
+W (i < 4) {
+    queue.add(i * 10);
+    i = i + 1;
+}
+
+P "Removing all values:";
+W (i > 1) {
+    T val = queue.remove();
+    P val;
+    i = i - 1;
+}
+
+# Queue with conditions
+T value = 42;
+I (value > 40) {
+    queue.add(value);
+    P "Added value in condition";
+}
+
+# Multiple queues
+Q T queue2;
+queue2.add(100);
+queue2.add(200);
+T val5 = queue2.remove();
+P "Second queue remove:";
+P val5;

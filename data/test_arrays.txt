@@ -1,0 +1,58 @@
+P "=== Testing Arrays ===";
+
+# Array declaration and initialization
+A T numbers = [1, 2, 3, 4, 5];
+A S words = ["Hello", "World", "Array"];
+
+# Accessing array elements
+P "First number:";
+P numbers[0];
+P "Last number:";
+P numbers[4];
+
+# Modifying array elements
+numbers[2] = 99;
+P "Modified third element:";
+P numbers[2];
+
+# Array with expressions
+numbers[3] = numbers[0] + numbers[1];
+P "Sum stored in fourth element:";
+P numbers[3];
+
+# Looping through array
+P "All array elements:";
+T i = 0;
+W (i < 5) {
+    P numbers[i];
+    i = i + 1;
+}
+
+# String array operations
+P "String array elements:";
+P words[0];
+P words[1];
+
+# String array with string operations
+S upper = U(words[0]);
+P "Uppercase first word:";
+P upper;
+
+# Array in conditions
+I (numbers[0] < numbers[4]) {
+    P "First element is less than last";
+}
+
+# Array elements in arithmetic
+T sum = numbers[1] + numbers[2];
+P "Sum of elements:";
+P sum;
+
+# Complex array operations
+T j = 0;
+W (j < 3) {
+    numbers[j] = numbers[j] * 2;
+    P "Doubled element:";
+    P numbers[j];
+    j = j + 1;
+}

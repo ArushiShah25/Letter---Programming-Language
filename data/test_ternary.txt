@@ -1,0 +1,54 @@
+P "=== Testing Ternary Operator ===";
+
+# Basic ternary operations
+T x = 5;
+T result = x > 3 ? 10 : 20;
+P "Basic ternary (should be 10):";
+P result;
+
+# Ternary with variables
+T a = 15;
+T b = 25;
+T max = a > b ? a : b;
+P "Maximum value:";
+P max;
+
+# Nested ternary
+T value = 7;
+T nested = value > 10 ? 1 : value > 5 ? 2 : 3;
+P "Nested ternary result:";
+P nested;
+
+# Ternary with strings
+S str1 = "Hello";
+S str2 = "World";
+S result_str = str1 = str2 ? "Equal" : "Different";
+P "String comparison result:";
+P result_str;
+
+# Ternary in expressions
+T num = 42;
+T calc = (num > 40 ? 100 : 0) + 5;
+P "Ternary in expression:";
+P calc;
+
+# Ternary with function calls	
+M isPositive(T n) {
+    R n > 0 ? 1 : 0;
+}
+T pos = isPositive(5);
+P "Is Positive test:";
+P pos;
+
+# Multiple conditions
+T y = 8;
+T multi = y < 5 ? 1 : y < 10 ? 2 : 3;
+P "Multiple conditions:";
+P multi;
+
+# Ternary with array access
+A T arr = [1, 2, 3];
+T idx = 1;
+T val = idx < 3 ? arr[idx] : 0;
+P "Array access with ternary:";
+P val;
