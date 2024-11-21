@@ -103,7 +103,6 @@ class Lexer:
             identifier += self.current_char
             self.advance()
         
-        # Check if it's a single-letter keyword
         for token_type in TokenType:
             if token_type.value == identifier:
                 return Token(token_type, identifier, self.line, start_pos)
@@ -123,30 +122,30 @@ class Lexer:
     def read_string(self) -> Token:
         string = ''
         start_pos = self.position
-        self.advance()  # Skip the opening quote
+        self.advance() 
         
         while self.current_char and self.current_char != '"':
             string += self.current_char
             self.advance()
         
         if self.current_char == '"':
-            self.advance()  # Skip the closing quote
+            self.advance() 
         
         return Token(TokenType.STRING_LITERAL, string, self.line, start_pos)
 
     def read_comment(self) -> Token:
         start_pos = self.position
-        self.advance()  # Skip first #
+        self.advance() 
         
-        if self.current_char == '*':  # Multi-line comment
-            self.advance()  # Skip *
+        if self.current_char == '*':  
+            self.advance()  
             while self.current_char:
                 if self.current_char == '*' and self.peek() == '#':
-                    self.advance()  # Skip *
-                    self.advance()  # Skip #
+                    self.advance()  
+                    self.advance()  
                     break
                 self.advance()
-        else:  # Single-line comment
+        else:  
             while self.current_char and self.current_char != '\n':
                 self.advance()
         
@@ -176,12 +175,10 @@ class Lexer:
             if self.current_char == '"':
                 return self.read_string()
             
-            # Handle operators and special characters
             current_char = self.current_char
             current_pos = self.position
             self.advance()
             
-            # Map single characters to token types
             char_to_token = {
                 '+': TokenType.PLUS,
                 '-': TokenType.MINUS,
@@ -294,7 +291,6 @@ class Parser:
         return ASTNode('if', children=[condition, then_stmt])
 
     def parse_for_statement(self) -> ASTNode:
-        """Parse for loop statement"""
         self.consume(TokenType.FOR)
         self.consume(TokenType.LPAREN)
         
@@ -328,7 +324,6 @@ class Parser:
         return ASTNode('while', children=[condition, body])
 
     def parse_method(self) -> ASTNode:
-        """Parse method declaration"""
         self.consume(TokenType.METHOD)
         name = self.current_token.value
         self.consume(TokenType.IDENTIFIER)
@@ -347,7 +342,6 @@ class Parser:
         ])
 
     def parse_parameter_list(self) -> List[ASTNode]:
-        """Parse function parameters"""
         parameters = []
         
         while True:
@@ -366,20 +360,20 @@ class Parser:
         return parameters
 
     def parse_return(self) -> ASTNode:
-        """Parse return statement"""
+        
         self.consume(TokenType.RETURN)
         expr = self.parse_expression()
         self.consume(TokenType.SEMICOLON)
         return ASTNode('return', children=[expr])
 
     def parse_comment(self) -> ASTNode:
-        """Parse comment statement"""
+        
         comment_token = self.current_token
         self.current_token = self.lexer.get_next_token()
         return ASTNode('comment', value=comment_token.value)
         
     def parse_array(self) -> ASTNode:
-        """Parse array declaration and operations"""
+        
         self.consume(TokenType.ARRAY)
         array_type = self.current_token.type
         self.current_token = self.lexer.get_next_token()
@@ -400,7 +394,7 @@ class Parser:
                       children=elements)
     
     def parse_expression_list(self) -> List[ASTNode]:
-        """Parse comma-separated expressions"""
+        
         expressions = [self.parse_expression()]
         
         while self.current_token.type == TokenType.COMMA:
@@ -410,7 +404,7 @@ class Parser:
         return expressions
     
     def parse_input(self) -> ASTNode:
-        """Parse input statement"""
+        
         self.consume(TokenType.INPUT)
         prompt = None
         if self.current_token.type == TokenType.STRING_LITERAL:
@@ -419,12 +413,12 @@ class Parser:
             self.consume(TokenType.SEMICOLON)
             return ASTNode('input', value={'prompt': prompt})
         
-        # If there's no prompt, just create an input node
+        
         self.consume(TokenType.SEMICOLON)
         return ASTNode('input')
 
     def parse_string_operation(self) -> ASTNode:
-        """Parse string operations (join, upper, lower)"""
+        
         op_type = self.current_token.type
         self.current_token = self.lexer.get_next_token()
         self.consume(TokenType.LPAREN)
@@ -434,12 +428,12 @@ class Parser:
         return ASTNode('string_operation', value={'operation': op_type}, children=[expr])
     
     def parse_data_structure(self) -> ASTNode:
-        """Parse stack and queue operations"""
+        
         struct_type = self.current_token.type
         self.current_token = self.lexer.get_next_token()
         
         if self.current_token.type in [TokenType.TYPE_INT, TokenType.TYPE_BOOL, TokenType.TYPE_STRING]:
-            # Declaration
+            
             data_type = self.current_token.type
             self.current_token = self.lexer.get_next_token()
             name = self.current_token.value
@@ -448,7 +442,7 @@ class Parser:
             return ASTNode('data_structure_declaration', 
                           value={'type': struct_type, 'data_type': data_type, 'name': name})
             
-        # All operations become method calls
+        
         name = self.current_token.value
         self.consume(TokenType.IDENTIFIER)
         self.consume(TokenType.DOT)
@@ -468,7 +462,7 @@ class Parser:
                       children=args)
     
     def parse_constant(self) -> ASTNode:
-        """Parse constant declaration"""
+        
         self.consume(TokenType.CONSTANT)
         const_type = self.current_token.type
         self.current_token = self.lexer.get_next_token()
@@ -492,7 +486,7 @@ class Parser:
         if self.current_token.type == TokenType.EQUAL:
             self.consume(TokenType.EQUAL)
             if self.current_token.type == TokenType.INPUT:
-                # Create an input node with type information
+               
                 input_node = ASTNode('input_expression', 
                                   value={'expected_type': type_token.type})
                 self.current_token = self.lexer.get_next_token()
@@ -512,8 +506,8 @@ class Parser:
                       value={'type': type_token.type, 'identifier': identifier})
     
     def parse_expression(self) -> ASTNode:
-        """Parse expression including ternary operations"""
-        left = self.parse_conditional()  # Start with conditional parsing
+        
+        left = self.parse_conditional()  
         
         if self.current_token and self.current_token.type == TokenType.QUESTION:
             self.consume(TokenType.QUESTION)
@@ -525,7 +519,7 @@ class Parser:
         return left
 
     def parse_conditional(self) -> ASTNode:
-        """Parse conditional expressions (previously parse_expression)"""
+        
         left = self.parse_term()
         
         while self.current_token and self.current_token.type in [
@@ -540,7 +534,7 @@ class Parser:
         return left
 
     def parse_identifier_statement(self) -> ASTNode:
-        """Parse statements that start with an identifier"""
+        
         name = self.current_token.value
         var_type = self.current_token.type
         self.consume(TokenType.IDENTIFIER)
@@ -602,7 +596,7 @@ class Parser:
             return ASTNode('boolean_literal', value=token.value.lower() == 'true')
             
         elif token.type in [TokenType.UPPER, TokenType.LOWER, TokenType.JOIN]:
-            # Handle string operations
+            
             op_type = token.type
             self.current_token = self.lexer.get_next_token()
             self.consume(TokenType.LPAREN)
@@ -613,7 +607,7 @@ class Parser:
                           children=[expr])
                           
         elif token.type == TokenType.INPUT:
-            # Handle input as an expression
+            
             self.current_token = self.lexer.get_next_token()
             return ASTNode('input_expression')
             
@@ -695,27 +689,25 @@ class Parser:
         return statements
 
 def print_ast(node: ASTNode, indent: int = 0) -> None:
-    """Pretty print the AST with proper indentation."""
+    
     indent_str = "  " * indent
     
     if not node:
         return
     
-    # Print node type
     print(f"{indent_str}Type: {node.type}")
     
-    # Print node value if it exists
     if node.value is not None:
         print(f"{indent_str}Value: {node.value}")
     
-    # Recursively print children
+
     if node.children:
         print(f"{indent_str}Children:")
         for child in node.children:
             print_ast(child, indent + 1)
 
 def print_program_ast(ast_nodes: List[ASTNode]) -> None:
-    """Print the entire program's AST."""
+    
     print("Program AST:")
     print("===========")
     for i, node in enumerate(ast_nodes, 1):
@@ -731,7 +723,7 @@ def parse_program(source_code: str) -> List[ASTNode]:
 import sys
 
 def read_file(filename: str) -> str:
-    """Read source code from a file."""
+    
     try:
         with open(filename, 'r') as file:
             return file.read()
@@ -743,7 +735,7 @@ def read_file(filename: str) -> str:
         sys.exit(1)
 
 def main():
-    # Check if filename is provided as command line argument
+   
     if len(sys.argv) != 2:
         print("Usage: python parser.py <filename>")
         print("Example: python parser.py program.txt")
