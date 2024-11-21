@@ -1,7 +1,0 @@
-T num = 42;
-S msg = "The number is: ";
-B isPositive = 1;
-I (isPositive & num > 0) {
-    P msg;
-    P num;
-}
