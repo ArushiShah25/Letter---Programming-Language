@@ -98,7 +98,6 @@ class Lexer:
         identifier = ''
         start_pos = self.position
         
-        # Allow letters, numbers, and underscores in identifiers
         while self.current_char and (self.current_char.isalnum() or self.current_char == '_'):
             identifier += self.current_char
             self.advance()
@@ -294,21 +293,17 @@ class Parser:
         self.consume(TokenType.FOR)
         self.consume(TokenType.LPAREN)
         
-        # Parse initialization
         init = self.parse_statement()
         
-        # Parse condition
         condition = self.parse_expression()
         self.consume(TokenType.SEMICOLON)
         
-        # Parse update expression
         var_name = self.current_token.value
         self.consume(TokenType.IDENTIFIER)
         self.consume(TokenType.EQUAL)
         update_expr = self.parse_expression()
         self.consume(TokenType.RPAREN)
         
-        # Parse body
         body = self.parse_block()
         
         return ASTNode('for', 
