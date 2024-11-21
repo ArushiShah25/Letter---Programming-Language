@@ -1,0 +1,57 @@
+P "=== Testing Variables and Arithmetic Operations ===";
+
+# Variable declarations
+P "Basic variable declarations:";
+T num1 = 42;
+T num2 = 10;
+P "num1 = "; P num1;
+P "num2 = "; P num2;
+
+# Addition
+T sum = num1 + num2;
+P "Addition (42 + 10):";
+P sum;
+
+# Subtraction
+T difference = num1 - num2;
+P "Subtraction (42 - 10):";
+P difference;
+
+# Multiplication
+T product = num1 * num2;
+P "Multiplication (42 * 10):";
+P product;
+
+# Division
+T quotient = num1 / num2;
+P "Division (42 / 10):";
+P quotient;
+
+# Complex expressions
+T result = (num1 + num2) * 2;
+P "Complex expression ((42 + 10) * 2):";
+P result;
+
+# Multiple operations
+T a = 5;
+T b = 3;
+T c = 2;
+T complex = a * b + c * (a - b);
+P "Complex calculation (5 * 3 + 2 * (5 - 3)):";
+P complex;
+
+# Zero handling
+T zero = 0;
+T posNum = 10;
+T sumZero = zero + posNum;
+P "Adding zero (0 + 10):";
+P sumZero;
+
+# Multiple assignments
+T x = 1;
+T y = x + 1;
+T z = y + 1;
+P "Sequential assignments:";
+P x;
+P y;
+P z;
