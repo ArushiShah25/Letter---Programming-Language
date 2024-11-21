@@ -1,0 +1,69 @@
+P "=== Testing Stack Operations ===";
+
+# Stack declaration
+K T stack;
+P "Stack operations test:";
+
+# Basic push operations
+P "Pushing elements:";
+stack.push(10);
+P "Pushed 10";
+stack.push(20);
+P "Pushed 20";
+stack.push(30);
+P "Pushed 30";
+
+# Basic pop operations
+T val1 = stack.pop();
+P "Popped first value (should be 30):";
+P val1;
+
+T val2 = stack.pop();
+P "Popped second value (should be 20):";
+P val2;
+
+# Push after pop
+stack.push(40);
+P "Pushed 40";
+T val3 = stack.pop();
+P "Popped third value (should be 40):";
+P val3;
+
+# Stack with expressions
+T x = 5;
+T y = 10;
+stack.push(x + y);
+P "Pushed sum of x and y";
+T val4 = stack.pop();
+P "Popped sum value:";
+P val4;
+
+# Stack in loops
+P "Pushing values in loop:";
+T i = 1;
+W (i < 4) {
+    stack.push(i * 10);
+    i = i + 1;
+}
+
+P "Popping all values:";
+W (i > 1) {
+    T val = stack.pop();
+    P val;
+    i = i - 1;
+}
+
+# Stack with conditions
+T value = 42;
+I (value > 40) {
+    stack.push(value);
+    P "Pushed value in condition";
+}
+
+# Multiple stacks
+K T stack2;
+stack2.push(100);
+stack2.push(200);
+T val5 = stack2.pop();
+P "Second stack pop:";
+P val5;
