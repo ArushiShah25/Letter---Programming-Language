@@ -1,9 +1,9 @@
 # SER502-Letter
 
 # Team-3
+- Arushi Ashish Shah
 - Pradyumn Mohta
 - Pavan kalyan Lingutla
-- Arushi Ashish Shah
 
 
 # Description
