@@ -1,0 +1,62 @@
+P "=== Testing String Operations ===";
+
+# Basic string declarations
+S str1 = "Hello";
+S str2 = "World";
+S str3 = "Hello";
+P "Original strings:";
+P str1;
+P str2;
+P str3;
+
+# String equality comparison
+P "String equality comparisons:";
+I (str1 = str2) {
+    P "str1 equals str2";
+} E {
+    P "str1 does not equal str2";
+}
+
+I (str1 = str3) {
+    P "str1 equals str3";
+} E {
+    P "str1 does not equal str3";
+}
+
+# String operations
+S upper1 = U(str1);
+S upper2 = U(str2);
+P "Uppercase strings:";
+P upper1;
+P upper2;
+
+S lower1 = L(str1);
+S lower2 = L(str2);
+P "Lowercase strings:";
+P lower1;
+P lower2;
+
+# String comparison in expressions
+T areEqual = str1 = str3;
+P "Equality check result (1 for true, 0 for false):";
+P areEqual;
+
+# Ternary with strings
+S result = str1 = str3 ? "Equal" : "Not Equal";
+P "Ternary result:";
+P result;
+
+# Combining strings and conditionals
+I (str1 = "Hello") {
+    S response = "Yes, it's Hello";
+    P response;
+}
+
+# String comparison in loops
+T counter = 3;
+W (counter > 0) {
+    I (str1 = "Hello") {
+        P "Still Hello";
+    }
+    counter = counter - 1;
+}
