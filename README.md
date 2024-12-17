@@ -1,6 +1,6 @@
-# SER502-Letter
+# Letter - Programming Language
 
-# Team-3
+# Team:
 - Arushi Ashish Shah
 - Pradyumn Mohta
 - Pavan kalyan Lingutla
